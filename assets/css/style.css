@@ -53,16 +53,12 @@ main {
 }
 
 /* =========================================
-   HEADER
+   HEADER & SELECTOR
    ========================================= */
-header { text-align: center; margin-bottom: 40px; }
-
-h1 {
-    font-size: 2.5rem;
-    font-weight: 700;
-    letter-spacing: -0.04em;
-    margin: 0 0 16px 0;
-    color: var(--fg-primary);
+header { 
+    text-align: center; 
+    margin-bottom: 40px; 
+    position: relative;
 }
 
 .privacy-pill {
@@ -77,8 +73,191 @@ h1 {
     color: var(--fg-secondary);
     font-weight: 500;
     box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    margin-bottom: 16px;
 }
 .privacy-pill svg { width: 12px; height: 12px; color: var(--fg-primary); }
+
+/* Tool Selector (New Navigation) */
+.tool-selector-wrapper {
+    position: relative;
+    max-width: 300px;
+    margin: 0 auto 16px auto;
+}
+
+.tool-selector-wrapper select {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 100%;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+    padding: 10px 40px 10px 16px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--fg-primary);
+    cursor: pointer;
+    box-shadow: var(--shadow-card);
+    transition: all 0.2s;
+    font-family: inherit;
+}
+
+.tool-selector-wrapper select:hover {
+    border-color: #bbb;
+    transform: translateY(-1px);
+}
+
+.tool-selector-wrapper select:focus {
+    outline: none;
+    border-color: var(--accent-blue);
+    box-shadow: 0 0 0 3px rgba(0, 112, 243, 0.1);
+}
+
+.selector-icon {
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+    color: var(--fg-secondary);
+}
+
+h1 {
+    font-size: 2.2rem;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    margin: 0;
+    color: var(--fg-primary);
+}
+
+/* =========================================
+   OPTIONS PANELS
+   ========================================= */
+.panel-config {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+    padding: 16px 24px;
+    margin-bottom: 20px;
+    display: none; 
+    animation: fadeIn 0.3s ease;
+    position: relative;
+    z-index: 40; 
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.opt-group {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.opt-label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--fg-primary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.opt-value {
+    background: var(--border-light);
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-family: monospace;
+}
+
+/* Resize Panel Specifics */
+.resize-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    gap: 16px;
+    align-items: end;
+}
+
+.input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.input-group label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--fg-secondary);
+}
+
+.input-field {
+    background: var(--bg-app);
+    border: 1px solid var(--border-light);
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 0.9rem;
+    color: var(--fg-primary);
+    width: 100%;
+    transition: border 0.2s;
+}
+
+.input-field:focus {
+    outline: none;
+    border-color: var(--accent-blue);
+    box-shadow: 0 0 0 2px rgba(0, 112, 243, 0.1);
+}
+
+.checkbox-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-bottom: 8px;
+}
+
+.checkbox-wrapper label {
+    font-size: 0.85rem;
+    color: var(--fg-primary);
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.helper-text {
+    grid-column: 1 / -1;
+    font-size: 0.75rem;
+    color: var(--fg-tertiary);
+    margin-top: 8px;
+}
+
+/* Range Slider Styling */
+input[type=range] {
+    -webkit-appearance: none;
+    width: 100%;
+    max-width: 200px;
+    background: transparent;
+}
+
+input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    height: 16px;
+    width: 16px;
+    border-radius: 50%;
+    background: var(--fg-primary);
+    cursor: pointer;
+    margin-top: -6px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+input[type=range]::-webkit-slider-runnable-track {
+    width: 100%;
+    height: 4px;
+    cursor: pointer;
+    background: var(--border-light);
+    border-radius: 2px;
+}
 
 /* =========================================
    COMPONENTS
@@ -91,7 +270,8 @@ h1 {
     text-align: center;
     cursor: pointer;
     transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-    position: relative;
+    position: relative; 
+    z-index: 1;
     box-shadow: var(--shadow-card);
 }
 .drop-zone:hover { border-color: #999; transform: translateY(-1px); box-shadow: var(--shadow-hover); }
@@ -194,7 +374,7 @@ h1 {
 .step-desc { font-size: 0.9rem; color: var(--fg-secondary); }
 
 /* =========================================
-   FAQ SECTION (SEO Semantic)
+   FAQ SECTION
    ========================================= */
 .faq-section {
     margin-top: 60px;
@@ -225,13 +405,39 @@ details[open] summary::after { content: "-"; }
     font-size: 0.95rem;
 }
 
-/* Footer */
-footer { text-align: center; padding: 40px; font-size: 0.8rem; color: var(--fg-tertiary); margin-top: 40px; }
+/* Footer & Quick Links */
+footer { 
+    text-align: center; 
+    padding: 40px 20px; 
+    font-size: 0.8rem; 
+    color: var(--fg-tertiary); 
+    margin-top: 40px;
+    background: var(--bg-surface);
+    border-top: 1px solid var(--border-light);
+}
+
+.footer-nav {
+    margin-bottom: 16px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+}
+
+.footer-link {
+    color: var(--fg-secondary);
+    text-decoration: none;
+    transition: color 0.2s;
+    font-weight: 500;
+}
+.footer-link:hover { color: var(--fg-primary); text-decoration: underline; }
+.footer-divider { color: var(--border-light); }
 
 @media (max-width: 600px) {
     main { padding: 30px 16px; }
-    h1 { font-size: 2rem; }
+    h1 { font-size: 1.8rem; }
     .file-name { max-width: 140px; }
     .actions { flex-direction: row; flex-wrap: wrap; }
     .steps-grid { grid-template-columns: 1fr; }
+    .resize-grid { grid-template-columns: 1fr; }
 }

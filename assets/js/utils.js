@@ -1,6 +1,14 @@
 'use strict';
 
 // ==========================================
+// SYSTEM CONFIGURATION
+// ==========================================
+const SYS_CONFIG = {
+    MAX_MOBILE_MEMORY: 50 * 1024 * 1024, // 50MB
+    MOBILE_PIXEL_LIMIT: 16 * 1024 * 1024 // 16MP
+};
+
+// ==========================================
 // VENDORIZED MICRO-ZIP ENGINE
 // ==========================================
 class JSZip {
@@ -57,10 +65,94 @@ class JSZip {
 }
 
 // ==========================================
-// APPLICATION LOGIC (CORE)
+// TOOL REGISTRY & ROUTING CONFIG
 // ==========================================
+const TOOLS = {
+    'webp-png': {
+        id: 'webp-png',
+        slug: 'webp-to-png',
+        pageTitle: 'WebP to PNG Converter',
+        pageDesc: 'Convert WebP to PNG instantly. Lossless quality preservation.',
+        label: 'WebP to PNG',
+        mimeInput: ['image/webp'],
+        acceptAttr: 'image/webp',
+        extOutput: '.png',
+        uiText: 'Drag & Drop WebP files',
+        panelId: null, 
+        processor: convertToPNG
+    },
+    'png-jpg': {
+        id: 'png-jpg',
+        slug: 'png-to-jpg',
+        pageTitle: 'PNG to JPG Converter',
+        pageDesc: 'Convert PNG to JPG for smaller file sizes.',
+        label: 'PNG to JPG',
+        mimeInput: ['image/png'],
+        acceptAttr: 'image/png',
+        extOutput: '.jpg',
+        uiText: 'Drag & Drop PNG files',
+        panelId: null, 
+        processor: convertPNGToJPG
+    },
+    'jpg-png': {
+        id: 'jpg-png',
+        slug: 'jpg-to-png',
+        pageTitle: 'JPG to PNG Converter',
+        pageDesc: 'Convert JPG to PNG format.',
+        label: 'JPG to PNG',
+        mimeInput: ['image/jpeg'],
+        acceptAttr: 'image/jpeg',
+        extOutput: '.png',
+        uiText: 'Drag & Drop JPG files',
+        panelId: null,
+        processor: convertToPNG
+    },
+    'to-webp': {
+        id: 'to-webp',
+        slug: 'to-webp',
+        pageTitle: 'Convert to WebP',
+        pageDesc: 'Convert images to WebP for modern web performance.',
+        label: 'To WebP',
+        mimeInput: ['image/jpeg', 'image/png'],
+        acceptAttr: 'image/jpeg, image/png',
+        extOutput: '.webp',
+        uiText: 'Drag & Drop JPG/PNG',
+        panelId: null,
+        processor: convertToWebP
+    },
+    'jpg-compressor': {
+        id: 'jpg-compressor',
+        slug: 'compressor',
+        pageTitle: 'Image Compressor',
+        pageDesc: 'Compress JPG and PNG images efficiently.',
+        label: 'Compressor',
+        mimeInput: ['image/jpeg', 'image/png'],
+        acceptAttr: 'image/jpeg, image/png',
+        extOutput: '.jpg',
+        uiText: 'Drag & Drop JPG/PNG',
+        panelId: 'panelQuality', 
+        processor: compressJPG
+    },
+    'image-resizer': {
+        id: 'image-resizer',
+        slug: 'resizer',
+        pageTitle: 'Free Image Resizer',
+        pageDesc: 'Resize images with preserved aspect ratio.',
+        label: 'Resizer',
+        mimeInput: ['image/jpeg', 'image/png', 'image/webp'],
+        acceptAttr: 'image/*',
+        extOutput: null, 
+        uiText: 'Drag & Drop Images',
+        panelId: 'panelResize', 
+        processor: resizeImage
+    }
+};
 
-// DOM Elements
+let currentToolId = 'webp-png';
+
+// ==========================================
+// DOM ELEMENTS
+// ==========================================
 const dropZone = document.getElementById('dropZone');
 const fileInput = document.getElementById('fileInput');
 const fileList = document.getElementById('fileList');
@@ -72,6 +164,21 @@ const btnDownloadAll = document.getElementById('btnDownloadAll');
 const btnReset = document.getElementById('btnReset');
 const actionArea = document.getElementById('actionArea');
 const mobileWarning = document.getElementById('mobileWarning');
+const dropZoneTitle = document.getElementById('dropZoneTitle');
+const toolSelector = document.getElementById('toolSelector'); 
+const footerNav = document.querySelector('.footer-nav');
+
+// Dynamic Meta Elements
+const appTitle = document.getElementById('appTitle');
+const metaDesc = document.getElementById('metaDesc');
+
+// Panels & Inputs
+const allPanels = document.querySelectorAll('.panel-config');
+const qualitySlider = document.getElementById('qualitySlider');
+const qualityValue = document.getElementById('qualityValue');
+const widthInput = document.getElementById('widthInput');
+const heightInput = document.getElementById('heightInput');
+const maintainRatio = document.getElementById('maintainRatio');
 
 // State
 let convertedFiles = [];
@@ -82,7 +189,109 @@ const isMobileDevice = () => {
     return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || (window.innerWidth < 800);
 };
 
-// Event Listeners
+// ==========================================
+// ROUTER & INITIALIZATION
+// ==========================================
+
+const Router = {
+    init: () => {
+        const path = window.location.pathname.replace('/', '');
+        let foundToolId = 'webp-png'; // Default
+
+        for (const key in TOOLS) {
+            if (TOOLS[key].slug === path) {
+                foundToolId = key;
+                break;
+            }
+        }
+        
+        Router.activate(foundToolId, false);
+
+        window.addEventListener('popstate', (e) => {
+            if (e.state && e.state.toolId) {
+                Router.activate(e.state.toolId, false);
+            }
+        });
+    },
+
+    navigate: (toolId) => {
+        Router.activate(toolId, true);
+    },
+
+    activate: (toolId, pushHistory) => {
+        if (isProcessing) return;
+
+        const tool = TOOLS[toolId];
+        if (!tool) return;
+
+        currentToolId = toolId;
+
+        // 0. Update Selector Value (Critical for Back Button)
+        if (toolSelector) toolSelector.value = toolId;
+
+        // 1. Update DOM Visuals
+        if (appTitle) appTitle.textContent = tool.pageTitle;
+        if (dropZoneTitle) dropZoneTitle.textContent = tool.uiText;
+        
+        // 2. Update Metadata
+        document.title = `${tool.pageTitle} | Architect Zero`;
+        if (metaDesc) metaDesc.content = tool.pageDesc;
+
+        // 3. Update Panels
+        allPanels.forEach(p => p.style.display = 'none');
+        if (tool.panelId) {
+            const activePanel = document.getElementById(tool.panelId);
+            if (activePanel) activePanel.style.display = 'block';
+        }
+
+        // 4. Update Inputs
+        fileInput.accept = tool.acceptAttr;
+
+        // 5. History Management
+        if (pushHistory) {
+            const newPath = tool.slug === 'webp-to-png' ? '/' : `/${tool.slug}`;
+            try {
+                 window.history.pushState({ toolId: toolId }, tool.pageTitle, newPath);
+            } catch (e) {
+                console.warn('History API not supported in this environment');
+            }
+        }
+
+        resetInterface();
+    }
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+    Router.init();
+});
+
+if (qualitySlider) {
+    qualitySlider.addEventListener('input', (e) => {
+        const val = Math.round(e.target.value * 100);
+        if (qualityValue) qualityValue.textContent = `${val}%`;
+    });
+}
+
+// Tool Switching Logic (Selector)
+if (toolSelector) {
+    toolSelector.addEventListener('change', (e) => {
+        Router.navigate(e.target.value);
+    });
+}
+
+// Footer Link Delegation
+if (footerNav) {
+    footerNav.addEventListener('click', (e) => {
+        if (e.target.classList.contains('js-route-link')) {
+            e.preventDefault();
+            const targetTool = e.target.getAttribute('data-tool');
+            if (targetTool !== currentToolId) {
+                Router.navigate(targetTool);
+            }
+        }
+    });
+}
+
 ['dragenter', 'dragover'].forEach(eventName => {
     dropZone.addEventListener(eventName, (e) => {
         e.preventDefault(); e.stopPropagation();
@@ -120,7 +329,7 @@ btnDownloadAll.addEventListener('click', async () => {
         convertedFiles.forEach(file => zip.file(file.name, file.blob));
         const content = await zip.generateAsync({ type: "application/zip" });
         const url = URL.createObjectURL(content);
-        triggerDownload(url, `architect-zero-converted-${Date.now()}.zip`);
+        triggerDownload(url, `architect-zero-${currentToolId}-${Date.now()}.zip`);
         setTimeout(() => URL.revokeObjectURL(url), 2000);
     } catch (error) {
         alert("Error generating ZIP. Insufficient memory.");
@@ -140,11 +349,17 @@ function resetInterface() {
     progressContainer.style.display = 'none';
     mobileWarning.style.display = 'none';
     dropZone.style.display = 'block';
+    if(widthInput) widthInput.value = '';
+    if(heightInput) heightInput.value = '';
 }
 
 async function handleFiles(files) {
     if (isProcessing || files.length === 0) return;
+    
+    const activeTool = TOOLS[currentToolId];
     isProcessing = true;
+    
+    // UI Prep
     dropZone.style.display = 'none';
     fileList.innerHTML = '';
     convertedFiles = [];
@@ -155,36 +370,61 @@ async function handleFiles(files) {
 
     const fileArray = Array.from(files);
     let processedCount = 0;
-    let currentTotalSize = 0; // Acumulador de segurança
+    let currentTotalSize = 0;
 
     for (const file of fileArray) {
-        if (!file.type.startsWith('image/')) {
-            addToList(file.name, null, 'Ignored');
+        // Dynamic MIME check
+        const isMimeValid = activeTool.id === 'image-resizer' 
+            ? file.type.startsWith('image/') 
+            : activeTool.mimeInput.includes(file.type);
+
+        if (!isMimeValid) {
+            addToList(file.name, null, 'Ignored (Type)');
             processedCount++;
             updateProgress(processedCount, fileArray.length);
             continue;
         }
 
         try {
-            const pngBlob = await convertWebPToPNG(file);
-            const safeName = file.name.replace(/\.[^/.]+$/, "") + ".png";
+            const outputBlob = await activeTool.processor(file);
+            
+            // Name Generation
+            let safeName;
+            if (activeTool.extOutput) {
+                safeName = file.name.replace(/\.[^/.]+$/, "") + activeTool.extOutput;
+            } else {
+                safeName = file.name; 
+            }
 
-            // Lógica de Acumulação e Disjuntor Mobile
-            currentTotalSize += pngBlob.size;
-
-            if (isMobileDevice() && currentTotalSize > 50 * 1024 * 1024) { // 50MB Limit
-                convertedFiles.push({ name: safeName, blob: pngBlob });
-                addToList(safeName, pngBlob, 'Success');
+            // Memory Safety Check
+            currentTotalSize += outputBlob.size;
+            if (isMobileDevice() && currentTotalSize > SYS_CONFIG.MAX_MOBILE_MEMORY) {
+                convertedFiles.push({ name: safeName, blob: outputBlob });
+                addToList(safeName, outputBlob, 'Success');
                 processedCount++;
                 updateProgress(processedCount, fileArray.length);
 
-                // Break circuit
-                alert('Memory Protection Active: Total size exceeds 50MB. ZIP download disabled to prevent browser crash. Please download files individually.');
+                alert('Memory Protection Active: Total size exceeds Limit. ZIP download disabled.');
                 break;
             }
 
-            convertedFiles.push({ name: safeName, blob: pngBlob });
-            addToList(safeName, pngBlob, 'Success');
+            // Calculation of Savings / Stats
+            let metaInfo = null;
+            if (['jpg-compressor', 'image-resizer', 'to-webp'].includes(activeTool.id)) {
+                const diff = file.size - outputBlob.size;
+                const ratio = Math.round((diff / file.size) * 100);
+                
+                if (diff > 0) {
+                    metaInfo = `saved ${ratio}% (${formatBytes(diff)})`;
+                } else if (diff < 0) {
+                    metaInfo = `+${formatBytes(Math.abs(diff))}`;
+                } else {
+                    metaInfo = `No Change`;
+                }
+            }
+
+            convertedFiles.push({ name: safeName, blob: outputBlob });
+            addToList(safeName, outputBlob, 'Success', metaInfo);
 
         } catch (error) {
             console.error(error);
@@ -198,16 +438,20 @@ async function handleFiles(files) {
     finishProcessing();
 }
 
-function convertWebPToPNG(file) {
+// ==========================================
+// PROCESSORS
+// ==========================================
+
+// REFACTOR: Generic PNG Converter (Handles WebP and JPG input)
+function convertToPNG(file) {
     return new Promise((resolve, reject) => {
         const img = new Image();
         const objectUrl = URL.createObjectURL(file);
+        
         img.onload = () => {
             URL.revokeObjectURL(objectUrl);
-            // Safe Limit for Mobile Canvas
-            const MAX_PIXELS = 16 * 1024 * 1024; // 16MP
-            if (img.width * img.height > MAX_PIXELS && isMobileDevice()) {
-                reject(new Error("Image dimensions too large for mobile memory"));
+            if (img.width * img.height > SYS_CONFIG.MOBILE_PIXEL_LIMIT && isMobileDevice()) {
+                reject(new Error("Image dimensions too large for mobile"));
                 return;
             }
             const canvas = document.createElement('canvas');
@@ -215,18 +459,135 @@ function convertWebPToPNG(file) {
             canvas.height = img.height;
             const ctx = canvas.getContext('2d');
             ctx.drawImage(img, 0, 0);
-            canvas.toBlob((blob) => {
-                if (blob) resolve(blob);
-                else reject(new Error("Conversion failed"));
-            }, 'image/png');
+            canvas.toBlob(b => b ? resolve(b) : reject(new Error("Fail")), 'image/png');
         };
-        img.onerror = () => {
-            URL.revokeObjectURL(objectUrl);
-            reject(new Error("Image load error"));
-        };
+        img.onerror = () => { URL.revokeObjectURL(objectUrl); reject(new Error("Load error")); };
         img.src = objectUrl;
     });
 }
+
+function convertPNGToJPG(file) {
+    return processCanvasToJPG(file, 0.9);
+}
+
+// NEW: Generic WebP Converter
+function convertToWebP(file) {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        const objectUrl = URL.createObjectURL(file);
+
+        img.onload = () => {
+            URL.revokeObjectURL(objectUrl);
+            if (img.width * img.height > SYS_CONFIG.MOBILE_PIXEL_LIMIT && isMobileDevice()) {
+                reject(new Error("Too large"));
+                return;
+            }
+            const canvas = document.createElement('canvas');
+            canvas.width = img.width;
+            canvas.height = img.height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0);
+            // Default quality 0.8 as requested
+            canvas.toBlob(b => b ? resolve(b) : reject(new Error("Fail")), 'image/webp', 0.8);
+        };
+        img.onerror = () => { URL.revokeObjectURL(objectUrl); reject(new Error("Load error")); };
+        img.src = objectUrl;
+    });
+}
+
+function compressJPG(file) {
+    const q = qualitySlider ? parseFloat(qualitySlider.value) : 0.8;
+    return processCanvasToJPG(file, q);
+}
+
+function resizeImage(file) {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        const objectUrl = URL.createObjectURL(file);
+
+        img.onload = () => {
+            URL.revokeObjectURL(objectUrl);
+            let targetW = widthInput && widthInput.value ? parseInt(widthInput.value) : 0;
+            let targetH = heightInput && heightInput.value ? parseInt(heightInput.value) : 0;
+            const keepRatio = maintainRatio ? maintainRatio.checked : true;
+
+            let finalW = img.width;
+            let finalH = img.height;
+
+            if (targetW > 0 || targetH > 0) {
+                if (keepRatio) {
+                    if (targetW === 0) targetW = 99999;
+                    if (targetH === 0) targetH = 99999;
+                    const ratio = Math.min(targetW / img.width, targetH / img.height);
+                    finalW = Math.round(img.width * ratio);
+                    finalH = Math.round(img.height * ratio);
+                } else {
+                    finalW = targetW > 0 ? targetW : img.width;
+                    finalH = targetH > 0 ? targetH : img.height;
+                }
+            }
+
+            if (finalW * finalH > SYS_CONFIG.MOBILE_PIXEL_LIMIT && isMobileDevice()) {
+                reject(new Error("Output too large for mobile memory"));
+                return;
+            }
+
+            const canvas = document.createElement('canvas');
+            canvas.width = finalW;
+            canvas.height = finalH;
+            const ctx = canvas.getContext('2d');
+
+            if (file.type === 'image/jpeg') {
+                ctx.fillStyle = "#FFFFFF";
+                ctx.fillRect(0, 0, finalW, finalH);
+            }
+            
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = "high";
+            ctx.drawImage(img, 0, 0, finalW, finalH);
+
+            const outType = file.type; 
+            const quality = 0.92;
+
+            canvas.toBlob((blob) => {
+                if (blob) resolve(blob);
+                else reject(new Error("Resize failed"));
+            }, outType, quality);
+        };
+
+        img.onerror = () => { URL.revokeObjectURL(objectUrl); reject(new Error("Image load error")); };
+        img.src = objectUrl;
+    });
+}
+
+function processCanvasToJPG(file, quality) {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        const objectUrl = URL.createObjectURL(file);
+
+        img.onload = () => {
+            URL.revokeObjectURL(objectUrl);
+            if (img.width * img.height > SYS_CONFIG.MOBILE_PIXEL_LIMIT && isMobileDevice()) {
+                reject(new Error("Too large"));
+                return;
+            }
+            const canvas = document.createElement('canvas');
+            canvas.width = img.width;
+            canvas.height = img.height;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = "#FFFFFF";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(img, 0, 0);
+            canvas.toBlob(b => b ? resolve(b) : reject(new Error("Fail")), 'image/jpeg', quality);
+        };
+        img.onerror = () => { URL.revokeObjectURL(objectUrl); reject(new Error("Load error")); };
+        img.src = objectUrl;
+    });
+}
+
+// ==========================================
+// UI HELPERS
+// ==========================================
 
 function updateProgress(current, total) {
     const percent = total === 0 ? 0 : Math.round((current / total) * 100);
@@ -241,16 +602,12 @@ function finishProcessing() {
     actionArea.style.display = 'flex';
 
     if (convertedFiles.length > 0) {
-        // Cálculo total para exibição
         const totalBytes = convertedFiles.reduce((acc, f) => acc + f.blob.size, 0);
-        const LIMIT_MB = 50 * 1024 * 1024; // 50MB
 
-        if (isMobileDevice() && totalBytes > LIMIT_MB) {
-            // Disable ZIP, show Warning
+        if (isMobileDevice() && totalBytes > SYS_CONFIG.MAX_MOBILE_MEMORY) {
             btnDownloadAll.style.display = 'none';
             mobileWarning.style.display = 'block';
         } else {
-            // Allow ZIP
             btnDownloadAll.style.display = 'inline-flex';
             btnDownloadAll.innerHTML = `
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -274,17 +631,26 @@ function formatBytes(bytes) {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }
 
-function addToList(fileName, blob, status) {
+function addToList(fileName, blob, status, meta = null) {
     const div = document.createElement('div');
     div.className = 'file-item';
 
-    // Logic string comparison updated to English
-    let statusClass = status === 'Success' ? 'status-done' : (status === 'Error' ? 'status-error' : 'status-pending');
+    let statusClass = 'status-pending';
+    if (status === 'Success') statusClass = 'status-done';
+    else if (status.includes('Ignored') || status === 'Error') statusClass = 'status-error';
+
+    let metaHtml = '';
+    if (meta) {
+        const isSaving = meta.includes('saved') || meta.includes('-');
+        const color = isSaving ? '#0070f3' : '#666'; 
+        metaHtml = `<span style="font-size: 0.75rem; color: ${color}; margin-left: 8px; font-weight: 500;">${meta}</span>`;
+    }
 
     div.innerHTML = `
         <div class="file-info">
             <span class="file-name" title="${fileName}">${fileName}</span>
             <span class="status-badge ${statusClass}">${status}</span>
+            ${metaHtml}
         </div>
     `;
 
