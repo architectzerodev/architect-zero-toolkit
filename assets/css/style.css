@@ -741,7 +741,11 @@ input[type=range]::-webkit-slider-runnable-track {
 .step-number {
     font-size: 3rem;
     font-weight: 800;
+
+    /* CORREÇÃO DE VISIBILIDADE: */
+    /* Revertido para o Original: */
     color: #e5e5e5;
+
     line-height: 1;
     position: absolute;
     top: -15px;

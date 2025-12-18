@@ -5,12 +5,42 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>WebP to PNG Converter | Architect Zero</title>
+    <title>Architect Zero | Secure Image Ops (Local & Serverless)</title>
     <meta name="description"
-        content="Convert WebP images to PNG instantly in your browser. Secure, serverless, and high-quality."
+        content="Stop uploading sensitive files. Convert WebP, PNG, JPG, PDF locally in browser (RAM). 100% Private. Offline Ready."
         id="metaDesc">
     <meta name="author" content="Architect Zero">
     <link rel="canonical" href="https://architectzero.xyz/" />
+
+    <!-- Open Graph / Social -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://architectzero.xyz/">
+    <meta property="og:title" content="Architect Zero | Secure Local Image Tools">
+    <meta property="og:description" content="100% Private. Convert files in browser memory. No server uploads.">
+    <meta property="og:image" content="https://architectzero.xyz/og-image.png">
+
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://architectzero.xyz/">
+    <meta property="twitter:title" content="Architect Zero | Secure Local Image Tools">
+    <meta property="twitter:description" content="100% Private. Convert files in browser memory. No server uploads.">
+    <meta property="twitter:image" content="https://architectzero.xyz/og-image.png">
+
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "Architect Zero",
+      "url": "https://architectzero.xyz",
+      "applicationCategory": "Privacy-focused image processing suite",
+      "operatingSystem": "Browser",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "featureList": "Offline Conversion, Zero Data Uploads, Local PDF Generation"
+    }
+    </script>
 
     <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
     <link rel="stylesheet" href="assets/css/style.css">
@@ -25,7 +55,7 @@
         <header>
             <div class="tool-selector-wrapper">
                 <select id="toolSelector" aria-label="Select Tool" style="display: none;">
-                    <optgroup label="Image Conversion">
+                    <optgroup label="Secure Conversion">
                         <option value="webp-png">WebP to PNG</option>
                         <option value="png-jpg">PNG to JPG</option>
                         <option value="jpg-png">JPG to PNG</option>
@@ -52,7 +82,7 @@
                         </div>
                     </div>
                     <div class="custom-options">
-                        <div class="custom-optgroup-label">Image Conversion</div>
+                        <div class="custom-optgroup-label">Secure Conversion</div>
                         <div class="custom-option" data-value="webp-png">WebP to PNG</div>
                         <div class="custom-option" data-value="png-jpg">PNG to JPG</div>
                         <div class="custom-option" data-value="jpg-png">JPG to PNG</div>
@@ -75,9 +105,9 @@
                     <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
                     <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
                 </svg>
-                🔒 Secure Local Processing
+                🔒 Secure Local Processing (Air-Gap Ready)
             </div>
-            <h1 id="appTitle" class="sr-only">WebP to PNG Converter</h1>
+            <h1 id="appTitle" class="sr-only">Secure WebP to PNG Converter</h1>
         </header>
 
         <div id="panelQuality" class="panel-config">
@@ -109,7 +139,7 @@
                     <input type="checkbox" id="maintainRatio" checked>
                     <label for="maintainRatio">Maintain Ratio</label>
                 </div>
-                <div class="helper-text">Values act as maximum boundaries. Leave one empty for automatic scaling.</div>
+                <div class="helper-text">Leave empty for automatic scaling.</div>
             </div>
         </div>
 
@@ -122,10 +152,11 @@
                     <line x1="12" y1="3" x2="12" y2="15"></line>
                 </svg>
             </div>
-            <div class="dz-title" id="dropZoneTitle">Drag & Drop WebP files</div>
-            <div class="dz-sub" id="dropZoneSub">Local processing. No images leave your device.</div>
+            <div class="dz-title" id="dropZoneTitle">Drag & Drop Confidential Files</div>
+            <div class="dz-sub" id="dropZoneSub">Data never leaves your RAM. 100% isolated browser processing.</div>
 
-            <button class="btn-trigger" onclick="document.getElementById('fileInput').click()">Select Files</button>
+            <button class="btn-trigger" onclick="document.getElementById('fileInput').click()">Select Files
+                (Local)</button>
             <input type="file" id="fileInput" multiple accept="image/webp" style="display: none;">
         </section>
 
@@ -171,7 +202,7 @@
         </div>
 
         <div id="mobileWarning" class="warning-box">
-            Memory Protection Active: Total size exceeds Limit. ZIP download disabled to prevent browser crash.
+            🛡️ Memory Protection Active: Safety limit reached to prevent browser crash. ZIP download disabled.
         </div>
 
         <div id="fileList" class="file-list"></div>
@@ -181,21 +212,20 @@
             <div class="steps-grid">
                 <article class="step-card">
                     <div class="step-number">1</div>
-                    <h3 class="step-title">Select Files</h3>
-                    <p class="step-desc">Drag and drop your images directly into the browser. No cloud uploads required.
+                    <h3 class="step-title">Secure Import</h3>
+                    <p class="step-desc">Drag contracts, patents, or NDA assets. Nothing is uploaded.
                     </p>
                 </article>
                 <article class="step-card">
                     <div class="step-number">2</div>
-                    <h3 class="step-title">Local Conversion</h3>
-                    <p class="step-desc">Our engine converts binary data instantly using your device's processing power.
+                    <h3 class="step-title">Sovereign Processing</h3>
+                    <p class="step-desc">Your CPU does the work via Canvas API. Zero servers. Zero logs.
                     </p>
                 </article>
                 <article class="step-card">
                     <div class="step-number">3</div>
-                    <h3 class="step-title">Save & Secure</h3>
-                    <p class="step-desc">Download your processed images individually or as a ZIP. Data is wiped upon
-                        refresh.</p>
+                    <h3 class="step-title">Zero Trace</h3>
+                    <p class="step-desc">Download files and close the tab. Data is incinerated from RAM instantly.</p>
                 </article>
             </div>
         </section>
@@ -204,26 +234,24 @@
             <h2 class="faq-title">Frequently Asked Questions</h2>
 
             <details itemscope itemprop="mainEntity" itemtype="https://schema.org/Question">
-                <summary itemprop="name">Are my images uploaded?</summary>
+                <summary itemprop="name">Are my files uploaded?</summary>
                 <div class="faq-content" itemscope itemprop="acceptedAnswer" itemtype="https://schema.org/Answer">
-                    <p itemprop="text">No. All conversion happens locally inside your browser using JavaScript and HTML5
-                        Canvas. Your files never leave your device, ensuring total privacy.</p>
+                    <p itemprop="text">Absolutely NOT. Conversion happens inside your browser using JavaScript and HTML5
+                        Canvas. Your files never leave your device.</p>
                 </div>
             </details>
 
             <details itemscope itemprop="mainEntity" itemtype="https://schema.org/Question">
-                <summary itemprop="name">Why convert to PNG?</summary>
+                <summary itemprop="name">Why use Architect Zero?</summary>
                 <div class="faq-content" itemscope itemprop="acceptedAnswer" itemtype="https://schema.org/Answer">
-                    <p itemprop="text">While WebP is efficient for the web, many image editors and legacy software do
-                        not support it natively. PNG ensures universal compatibility with transparency support.</p>
+                    <p itemprop="text">Free online sites sell your data. We use your hardware to guarantee privacy.</p>
                 </div>
             </details>
 
             <details itemscope itemprop="mainEntity" itemtype="https://schema.org/Question">
-                <summary itemprop="name">Is there a file limit?</summary>
+                <summary itemprop="name">Why is there a mobile limit?</summary>
                 <div class="faq-content" itemscope itemprop="acceptedAnswer" itemtype="https://schema.org/Answer">
-                    <p itemprop="text">Desktop is unlimited (RAM dependent). Mobile is capped at ~50MB for stability to
-                        prevent browser crashes.</p>
+                    <p itemprop="text">Stability. We implement a safety Kill Switch to prevent device lag.</p>
                 </div>
             </details>
         </section>
@@ -263,7 +291,7 @@
 
             // Sync UI on History Navigation (Back/Forward buttons)
             window.addEventListener('popstate', () => {
-                // Pequeno delay para garantir que o Router do utils.js já executou
+                // Small delay to ensure utils.js Router has executed
                 setTimeout(() => {
                     const selectedOption = nativeSelect.options[nativeSelect.selectedIndex];
                     if (selectedOption) {
